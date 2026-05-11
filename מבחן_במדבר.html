@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>מבחן במדבר כ"ה-כ"ז</title>
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;600;800;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --gold: #f5c842;
+  --bg: #0f0c1a;
+  --card: #1a1530;
+  --card2: #221d3a;
+  --text: #f0ecff;
+  --muted: #8b82b0;
+  --correct: #22c55e;
+  --wrong: #ef4444;
+  --radius: 16px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Heebo', sans-serif;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 16px 16px 110px;
+}
+body::before {
+  content: '';
+  position: fixed;
+  top: -20%; right: -20%;
+  width: 70vw; height: 70vw;
+  background: radial-gradient(circle, rgba(245,200,66,0.06) 0%, transparent 70%);
+  pointer-events: none; z-index: 0;
+}
+#app { width: 100%; max-width: 500px; position: relative; z-index: 1; }
+.screen { animation: fadeUp 0.35s ease; }
+@keyframes fadeUp { from { opacity:0; transform:translateY(18px);} to { opacity:1; transform:none;} }
+
+.start-box { text-align: center; padding: 40px 20px; }
+.start-icon { font-size: 72px; margin-bottom: 16px; line-height: 1; }
+.start-title { font-size: 30px; font-weight: 900; color: var(--gold); margin-bottom: 8px; line-height: 1.2; }
+.start-sub { font-size: 15px; color: var(--muted); margin-bottom: 28px; line-height: 1.7; }
+.stats-row { display: flex; justify-content: center; gap: 12px; margin-bottom: 28px; flex-wrap: wrap; }
+.stat { background: var(--card); border: 1px solid rgba(245,200,66,0.18); border-radius: 12px; padding: 10px 18px; text-align: center; }
+.stat-num { font-size: 22px; font-weight: 900; color: var(--gold); }
+.stat-lbl { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+.section-tabs { display: flex; gap: 8px; margin-bottom: 24px; flex-wrap: wrap; justify-content: center; }
+.tab-btn {
+  padding: 8px 16px; border-radius: 99px; font-family: 'Heebo', sans-serif;
+  font-size: 14px; font-weight: 700; cursor: pointer; border: 1.5px solid rgba(245,200,66,0.25);
+  background: transparent; color: var(--muted); transition: all 0.15s;
+}
+.tab-btn.active { background: var(--gold); color: #0f0c1a; border-color: var(--gold); }
+.tab-btn:hover:not(.active) { border-color: var(--gold); color: var(--gold); }
+
+.btn-gold {
+  width: 100%; padding: 18px; background: var(--gold); color: #0f0c1a;
+  border: none; border-radius: var(--radius); font-size: 18px; font-weight: 900;
+  font-family: 'Heebo', sans-serif; cursor: pointer;
+  box-shadow: 0 4px 28px rgba(245,200,66,0.35); transition: transform 0.1s;
+}
+.btn-gold:active { transform: scale(0.97); }
+
+.game-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+.q-counter { font-size: 13px; color: var(--muted); font-weight: 700; }
+.score-badge { background: var(--card); border: 1px solid rgba(245,200,66,0.22); border-radius: 99px; padding: 4px 14px; font-size: 13px; font-weight: 800; color: var(--gold); }
+.progress-wrap { background: rgba(255,255,255,0.08); border-radius: 99px; height: 5px; margin-bottom: 18px; overflow: hidden; }
+.progress-fill { height: 100%; background: var(--gold); border-radius: 99px; transition: width 0.4s ease; }
+
+.section-label { font-size: 11px; font-weight: 800; color: var(--muted); letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 10px; }
+
+.q-card { background: var(--card); border: 1px solid rgba(255,255,255,0.07); border-radius: var(--radius); padding: 22px 18px; margin-bottom: 14px; }
+.q-badge { display: inline-block; font-size: 11px; font-weight: 800; padding: 3px 10px; border-radius: 99px; margin-bottom: 10px; letter-spacing: 0.04em; }
+.badge-mc { background: rgba(245,200,66,0.13); color: var(--gold); }
+.badge-open { background: rgba(160,100,255,0.15); color: #c4a8ff; }
+.q-text { font-size: 16px; font-weight: 700; line-height: 1.65; }
+.q-source { font-size: 12px; color: var(--muted); margin-top: 6px; line-height: 1.5; font-style: italic; }
+
+.options { display: flex; flex-direction: column; gap: 9px; margin-bottom: 14px; }
+.opt-btn {
+  width: 100%; text-align: right; padding: 13px 16px;
+  background: var(--card2); border: 1.5px solid rgba(255,255,255,0.08);
+  border-radius: 12px; color: var(--text); font-size: 14px;
+  font-family: 'Heebo', sans-serif; cursor: pointer; transition: all 0.15s;
+  display: flex; align-items: flex-start; gap: 10px; line-height: 1.5;
+}
+.opt-btn:hover:not(:disabled) { border-color: rgba(245,200,66,0.45); background: rgba(245,200,66,0.05); }
+.opt-btn:disabled { cursor: default; }
+.opt-letter { min-width: 26px; height: 26px; border-radius: 7px; background: rgba(255,255,255,0.07); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 800; flex-shrink: 0; margin-top: 1px; }
+.opt-btn.correct { background: rgba(34,197,94,0.12); border-color: var(--correct); }
+.opt-btn.correct .opt-letter { background: var(--correct); color: #fff; }
+.opt-btn.wrong { background: rgba(239,68,68,0.1); border-color: var(--wrong); }
+.opt-btn.wrong .opt-letter { background: var(--wrong); color: #fff; }
+
+.open-area {
+  width: 100%; background: var(--card2); border: 1.5px solid rgba(255,255,255,0.08);
+  border-radius: 12px; color: var(--text); font-family: 'Heebo', sans-serif;
+  font-size: 14px; padding: 13px 16px; min-height: 80px; resize: vertical;
+  margin-bottom: 10px; outline: none; transition: border-color 0.15s; line-height: 1.6;
+}
+.open-area:focus { border-color: rgba(245,200,66,0.4); }
+.model-answer { background: rgba(160,100,255,0.1); border: 1px solid rgba(160,100,255,0.25); border-radius: 12px; padding: 13px 16px; font-size: 14px; line-height: 1.75; color: #ddd6fe; margin-bottom: 12px; display: none; }
+.model-answer.show { display: block; }
+.model-answer strong { color: #c4a8ff; }
+
+.feedback-bar { border-radius: 12px; padding: 12px 16px; font-size: 14px; font-weight: 700; text-align: center; margin-bottom: 14px; display: none; animation: pop 0.2s ease; }
+@keyframes pop { from { transform: scale(0.94); } to { transform: scale(1); } }
+.feedback-bar.show { display: block; }
+.feedback-correct { background: rgba(34,197,94,0.15); color: var(--correct); border: 1px solid rgba(34,197,94,0.3); }
+.feedback-wrong { background: rgba(239,68,68,0.12); color: #fca5a5; border: 1px solid rgba(239,68,68,0.3); }
+.feedback-open { background: rgba(160,100,255,0.1); color: #c4a8ff; border: 1px solid rgba(160,100,255,0.25); }
+
+.action-row { display: flex; gap: 10px; }
+.btn-secondary { flex: 1; padding: 14px; background: transparent; border: 1.5px solid rgba(255,255,255,0.12); border-radius: 12px; color: var(--text); font-family: 'Heebo', sans-serif; font-size: 14px; font-weight: 700; cursor: pointer; transition: background 0.15s; }
+.btn-secondary:hover { background: rgba(255,255,255,0.05); }
+.btn-next { flex: 2; padding: 14px; background: var(--gold); color: #0f0c1a; border: none; border-radius: 12px; font-family: 'Heebo', sans-serif; font-size: 15px; font-weight: 900; cursor: pointer; transition: transform 0.1s; display: none; }
+.btn-next.show { display: block; }
+.btn-next:active { transform: scale(0.97); }
+
+.hint-float { position: fixed; bottom: 24px; left: 16px; z-index: 100; display: none; }
+.hint-btn { background: linear-gradient(135deg, #7c3aed, #a855f7); color: #fff; border: none; border-radius: 99px; padding: 13px 22px; font-family: 'Heebo', sans-serif; font-size: 15px; font-weight: 900; cursor: pointer; box-shadow: 0 4px 24px rgba(124,58,237,0.55); display: flex; align-items: center; gap: 8px; transition: transform 0.1s; }
+.hint-btn:active { transform: scale(0.95); }
+
+.hint-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 200; display: flex; align-items: flex-end; justify-content: center; padding: 16px; animation: fadeIn2 0.2s ease; }
+@keyframes fadeIn2 { from { opacity:0; } to { opacity:1; } }
+.hint-overlay.hidden { display: none; }
+.hint-modal { background: #1e1835; border: 1px solid rgba(168,85,247,0.35); border-radius: 20px; padding: 24px 20px; width: 100%; max-width: 500px; animation: slideUp 0.25s ease; }
+@keyframes slideUp { from { transform: translateY(30px); } to { transform: none; } }
+.hint-modal-title { font-size: 22px; font-weight: 900; color: #a855f7; margin-bottom: 6px; display: flex; align-items: center; gap: 8px; }
+.hint-modal-sub { font-size: 13px; color: var(--muted); margin-bottom: 18px; }
+.hint-answer { background: rgba(168,85,247,0.1); border: 1px solid rgba(168,85,247,0.2); border-radius: 12px; padding: 14px 16px; font-size: 15px; font-weight: 600; color: #ddd6fe; line-height: 1.75; margin-bottom: 16px; }
+.hint-close { width: 100%; padding: 14px; background: rgba(168,85,247,0.15); border: 1px solid rgba(168,85,247,0.3); border-radius: 12px; color: #a855f7; font-family: 'Heebo', sans-serif; font-size: 15px; font-weight: 800; cursor: pointer; }
+
+.result-box { text-align: center; padding: 32px 20px; }
+.result-icon { font-size: 72px; margin-bottom: 16px; }
+.result-title { font-size: 28px; font-weight: 900; color: var(--gold); margin-bottom: 8px; }
+.big-score { font-size: 72px; font-weight: 900; color: var(--gold); line-height: 1; margin: 12px 0; }
+.score-label { font-size: 15px; color: var(--muted); margin-bottom: 28px; }
+.result-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 28px; }
+.r-stat { background: var(--card); border: 1px solid rgba(255,255,255,0.07); border-radius: 12px; padding: 16px; }
+.r-stat-num { font-size: 26px; font-weight: 900; margin-bottom: 4px; }
+.r-stat-lbl { font-size: 12px; color: var(--muted); }
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<div class="hint-overlay hidden" id="hint-overlay">
+  <div class="hint-modal">
+    <div class="hint-modal-title">💡 רמז ענק</div>
+    <div class="hint-modal-sub">בטוח? זה הרמז הכי גדול שיש...</div>
+    <div class="hint-answer" id="hint-text"></div>
+    <button class="hint-close" onclick="closeHint()">הבנתי, סגור</button>
+  </div>
+</div>
+
+<div class="hint-float" id="hint-float">
+  <button class="hint-btn" onclick="openHint()">💡 רמז ענק</button>
+</div>
+
+<script>
+const sections = [
+  { label: 'פרק כ"ה - חטא בעל פעור', short: 'כ"ה' },
+  { label: 'פרק כ"ה - זמרי ופינחס', short: 'זמרי' },
+  { label: 'פרק כ"ו - המפקד', short: 'כ"ו' },
+  { label: 'פרק כ"ז - בנות צלפחד', short: 'כ"ז א' },
+  { label: 'פרק כ"ז - יהושע', short: 'כ"ז ב' },
+];
+
+const allQ = [
+  // === פרק כ"ה - חטא בעל פעור ===
+  {
+    sec: 0,
+    type: 'mc',
+    q: 'מה היה תחילת חטאם של ישראל בשיטים?',
+    opts: ['עבודת בעל פעור', 'זנות עם בנות מואב', 'אכילה מזבחי האלילים', 'קבלת לחם מהמואבים'],
+    ans: 1,
+    hint: 'ספורנו: "ויחל העם לזנות - תחילת עניינם לא היה לעבוד עבודה זרה כלל, אבל לזנות בלבד"',
+    src: 'במדבר כה, א; ספורנו'
+  },
+  {
+    sec: 0,
+    type: 'mc',
+    q: 'לאיזה חטא חמור יותר הגיעו ישראל בעקבות חטאם הראשון?',
+    opts: ['גנבה ממואב', 'עבודה זרה - השתחוות לאלוהי מואב', 'מרידה במשה', 'הקרבת קורבנות שלא במקום'],
+    ans: 1,
+    hint: 'ספורנו: "שכך דרכו של יצר הרע לצאת מרעה אל רעה" - מזנות לעבודה זרה',
+    src: 'במדבר כה, ב-ג; ספורנו'
+  },
+  {
+    sec: 0,
+    type: 'open',
+    q: 'כיצד מסביר ספורנו את התהליך ההדרגתי בחטא? וכיצד האזהרה בשמות לד מבססת את דבריו?',
+    hint: 'ספורנו: "דרכו של יצר הרע לצאת מרעה אל רעה" - תחילה זנות, אחר עבודה זרה. שמות לד מזהיר בדיוק על שרשרת זו: "וקרא לך ואכלת מזבחו... וזנו בנותיו... והזנו את בניך"',
+    modelAns: 'ספורנו מסביר שתחילת חטאם לא הייתה עבודה זרה, אלא זנות בלבד. אך "דרכו של יצר הרע לצאת מרעה אל רעה" - מחטא קל לחמור. האזהרה בשמות לד מבססת זאת כי היא מתארת בדיוק את אותה שרשרת: קשר עם בנות האומות → אכילה מזבחיהן → זנות → עבודה זרה.'
+  },
+  {
+    sec: 0,
+    type: 'mc',
+    q: 'מה ציווה ה\' את משה לעשות עם ראשי העם? (לפי רש"י)',
+    opts: ['להגלותם למדבר', 'לשפוט ולתלות את העובדים לפעור לעיני כל', 'להביאם לפני אלעזר הכהן', 'להחרים את רכושם'],
+    ans: 1,
+    hint: 'רש"י: "קח את כל ראשי העם כדי לשפוט את העובדים לפעור - והוקע (ותלה) אותם נגד השמש - לעיני כולם"',
+    src: 'במדבר כה, ד; רש"י'
+  },
+  {
+    sec: 0,
+    type: 'mc',
+    q: 'מהו חטאם של ראשי העם לפי ר\' יודן?',
+    opts: ['עבדו בעצמם לבעל פעור', 'לא מיחו בחוטאים ולא מנעו מהם לחטוא', 'הביאו את בנות מואב למחנה', 'הסתירו את החוטאים'],
+    ans: 1,
+    hint: 'ר\' יודן: "ראשי העם תלה על שלא מיחו בבני אדם" - אחריות המנהיג על מעשי הציבור',
+    src: 'במדבר כה, ד; ר\' יודן'
+  },
+  // === פרק כ"ה - זמרי ופינחס ===
+  {
+    sec: 1,
+    type: 'mc',
+    q: 'מה עשה זמרי בן סלוא ומה הייתה מטרתו?',
+    opts: [
+      'לקח נשק מהמדיינים',
+      'הביא את כזבי לעיני משה וטען שמשה עצמו נשא אשה מדיינית',
+      'ניסה לברוח עם כזבי מהמחנה',
+      'ניסה לשכנע את משה לאפשר נישואין עם המדייניות'
+    ],
+    ans: 1,
+    hint: 'זמרי הביא את כזבי לעיני משה ואמר: "אשה זו אסורה או מותרת? ואם תאמר אסורה, אז התיר לך להתחתן עם בת יתרו המדיינית" - טיעון שקרי כי משה גייר אותה לפני מתן תורה.',
+    src: 'במדבר כה, ו; מדרש'
+  },
+  {
+    sec: 1,
+    type: 'mc',
+    q: 'מה הייתה תגובת משה כשזמרי הביא את כזבי לעיניו?',
+    opts: [
+      'ציווה מיד להרוג את זמרי',
+      'נתעלמה ממנו ההלכה ולא הגיב',
+      'קרא לאלעזר הכהן לפסוק',
+      'פנה לה\' בתפילה'
+    ],
+    ans: 1,
+    hint: 'ממשה נתעלמה ההלכה שצריך להרוג את זמרי על מעשהו, ובני ישראל געו כולם בבכיה',
+    src: 'במדבר כה, ו; רש"י'
+  },
+  {
+    sec: 1,
+    type: 'mc',
+    q: 'כמה מתו במגפה שקדמה למעשה פינחס?',
+    opts: ['12,000', '24,000', '36,000', '3,000'],
+    ans: 1,
+    hint: 'במדבר כה, ט - "ויהיו המתים במגפה ארבעה ועשרים אלף"',
+    src: 'במדבר כה, ט'
+  },
+  {
+    sec: 1,
+    type: 'mc',
+    q: 'מה משמעות "ברית שלום" שקיבל פינחס - לפי אב"ע?',
+    opts: [
+      'שלא יילחם עוד במלחמות',
+      'הבטחה שלא יפגע משבט שמעון וגואלי דם זמרי שעמדו עליו',
+      'שיכהן ככהן גדול',
+      'שיורש את תפקיד משה'
+    ],
+    ans: 1,
+    hint: 'אב"ע: "מפני שעמדו נגד שבט שמעון, וגואל דם זמרי הבטיח לו שלום" - פינחס היה בסכנה ממשית',
+    src: 'במדבר כה, יב; אב"ע'
+  },
+  {
+    sec: 1,
+    type: 'mc',
+    q: 'מדוע לפי רש"י קיבל פינחס ברית כהונת עולם, והרי כהונה כבר ניתנה לזרע אהרון?',
+    opts: [
+      'כי הוא היה הגדול בבניו של אהרון',
+      'כי פינחס נולד לפני המשיחה ולא נכלל בה - ונעשה כהן רק עכשיו בשכר מעשהו',
+      'כי אלעזר אביו ויתר לו על הכהונה',
+      'כי ה\' ביטל את הכהונה מבני אהרון'
+    ],
+    ans: 1,
+    hint: 'רש"י: "פינחס הנכד שנולד קודם לכן ולא נמשח, לא נכלל בכהונה. מכאן שפינחס נהיה לכהן רק לאחר שהרג את זמרי"',
+    src: 'במדבר כה, יג; רש"י'
+  },
+  {
+    sec: 1,
+    type: 'mc',
+    q: 'מדוע נצטוו ישראל "צרור את המדיינים" אך לא נצטוו כך על מואב?',
+    opts: [
+      'כי מואב הייתה חזקה יותר',
+      'כי בנות מואב פעלו מתוך אהבה ולא עצה',
+      'כי עתידה רות המואביה לצאת מהם, שממנה יצא דוד המלך',
+      'כי מלך מואב בלק כבר הוענש בנפרד'
+    ],
+    ans: 2,
+    hint: 'על מואב לא ציווה ה\' להשמיד, מפני שעתידה רות המואביה לצאת מהם, שממנה יצא דוד המלך',
+    src: 'במדבר כה, יז; מדרש'
+  },
+  {
+    sec: 1,
+    type: 'open',
+    q: 'מה היה שכרו של פינחס - פרט את שתי הברכות שקיבל ומה הביא כל אחת מהן?',
+    hint: 'א. ברית שלום - הגנה מגואלי דם זמרי (אב"ע), וכן כי עשה טוב ה\' גומל לו (רש"י). ב. ברית כהונת עולם - כי לא נכלל קודם בכהונה, ועכשיו קיבלה בזכות מעשהו.',
+    modelAns: 'א. ברית שלום - לפי אב"ע: הגנה מגואלי דם שבט שמעון שעמדו עליו. לפי רש"י: ה\' גומל לו טובה על שעשה טוב. ב. ברית כהונת עולם - לו ולזרעו. לפי רש"י, פינחס נולד לפני שנמשחו הכהנים ולא נכלל בכהונה. עכשיו, בשכר מעשהו, קיבל כהונה.'
+  },
+  // === פרק כ"ו - המפקד ===
+  {
+    sec: 2,
+    type: 'mc',
+    q: 'לשם מה נערך המפקד בפרק כ"ו? (ציין שתי מטרות)',
+    opts: [
+      'לספור את שבט לוי ולמנות כהנים',
+      'לדעת כמה נותרו לאחר המגפה, ולחלק את הארץ',
+      'לבחור חיילים לכיבוש מדיין',
+      'לרשום את שמות הנשואים'
+    ],
+    ans: 1,
+    hint: 'רש"י: כרועה שנכנסו זאבים לעדרו - מונה כמה נותרו. בנוסף: מפקד לכיבוש הארץ ולחלוקתה',
+    src: 'במדבר כו, א-ב; רש"י'
+  },
+  {
+    sec: 2,
+    type: 'mc',
+    q: 'מי קיבל נחלה לפי "לאלה תחלק את הארץ" (כו, נג)?',
+    opts: [
+      'כל בן ישראל שהגיע לגיל עשרים עד כיבוש הארץ',
+      'רק מי שנמנה במפקד מעל גיל עשרים ביום המפקד',
+      'כל שבטי ישראל בחלקים שווים',
+      'רק הלוחמים שהשתתפו בכיבוש'
+    ],
+    ans: 1,
+    hint: 'הארץ תחולק רק למי שהיה במפקד מעל גיל עשרים - לא למי שהגיע לגיל עשרים אחרי המפקד, גם אם הגיע לפני חלוקת הארץ בפועל (הכיבוש נמשך 7 שנים)',
+    src: 'במדבר כו, נג-נד'
+  },
+  {
+    sec: 2,
+    type: 'mc',
+    q: 'כיצד חולקה הארץ לשבטים - כיצד נקבעו הגדלים והמיקומים?',
+    opts: [
+      'גדלים שווים לכולם, מיקום בגורל',
+      'גדלים לפי מספר אנשי השבט, מיקום בגורל',
+      'גדלים בגורל, מיקום לפי מספר אנשי השבט',
+      'גדלים ומיקום נקבעו שניהם בגורל'
+    ],
+    ans: 1,
+    hint: 'רש"י: "לרב תרבה נחלתו ולמעט תמעיט נחלתו" - גודל לפי מספר השבט. "אך בגורל יחלק" - מיקום בגורל',
+    src: 'במדבר כו, נד-נה'
+  },
+  {
+    sec: 2,
+    type: 'mc',
+    q: 'מה משמעות "ובאלה לא היה איש" (כו, סד)? מדוע לא נגזרה הגזירה על הנשים?',
+    opts: [
+      'כל הגברים מתו במגפת בעל פעור',
+      'כל יוצאי מצרים בני עשרים מתו בגלל חטא המרגלים; על הנשים לא נגזר כי חיבבו את הארץ',
+      'כל בני שבט לוי לא נמנו',
+      'הנשים לא מנויות בכלל בפקודה זו'
+    ],
+    ans: 1,
+    hint: 'רש"י: "לא היה איש" - אבל נשים היו, כי לא נגזרה עליהן גזירת המרגלים, לפי שהיו מחבבות את הארץ. לכן נסמכה פרשת בנות צלפחד לפרקנו.',
+    src: 'במדבר כו, סד; רש"י'
+  },
+  // === פרק כ"ז - בנות צלפחד ===
+  {
+    sec: 3,
+    type: 'mc',
+    q: 'מדוע התורה מציינת את יחוסן של בנות צלפחד עד יוסף?',
+    opts: [
+      'כדי להראות שהן ממשפחה חשובה',
+      'כי יוסף חיבב את הארץ - וצאצאיו חיבבו גם הם ואמרו "תנה לנו אחוזה"',
+      'כי נחלת יוסף הייתה הגדולה ביותר',
+      'כי יוסף לא קיבל נחלה ועתה מתקנים זאת'
+    ],
+    ans: 1,
+    hint: 'כמו יוסף שאמר "והעליתם את עצמותי" - חיבוב הארץ. אף בנותיו של צלפחד חיבבו את הארץ ואמרו "תנה לנו אחוזה"',
+    src: 'במדבר כז, א; מדרש'
+  },
+  {
+    sec: 3,
+    type: 'mc',
+    q: 'מה הייתה תביעת בנות צלפחד? ומה אמר רש"י על חכמתן?',
+    opts: [
+      'שיקבלו פיצוי כספי במקום נחלה',
+      'שיקבלו את נחלת אביהן כי הן "במקום בן עומדות"',
+      'שאמן תינשא ליבם ותקבל נחלה',
+      'שיקבלו חלק בנחלת דודיהן'
+    ],
+    ans: 1,
+    hint: 'רש"י: "אנו במקום בן עומדות... אם היה לו בן לא היו תובעות כלום - מכאן שחכמות היו". הן הבינו שזכותן נובעת מהיעדר בן.',
+    src: 'במדבר כז, ב-ד; רש"י'
+  },
+  {
+    sec: 3,
+    type: 'mc',
+    q: 'מדוע ציינו בנות צלפחד "כי בחטאו מת" - ולא בחטא קורח?',
+    opts: [
+      'כי רצו להוכיח שאביהן היה צדיק גמור',
+      'כי חטא קורח היה חמור יותר ופוסל מנחלה, ואביהן חטא חטא אישי שלא החטיא אחרים',
+      'כי לא ידעו מדוע מת אביהן',
+      'כי עדת קורח לא קיבלה נחלה בכלל'
+    ],
+    ans: 1,
+    hint: 'רש"י: "בחטאו מת ולא החטיא אחרים". רמב"ן הוסיף: חשבו שמשה שונא עדת קורח יותר מכל, ולכן מיהרו לציין שאביהן לא היה שם.',
+    src: 'במדבר כז, ג; רש"י, רמב"ן'
+  },
+  {
+    sec: 3,
+    type: 'mc',
+    q: 'מדוע נתעלמה הלכה ממשה בעניין בנות צלפחד? (ב\' פירושים)',
+    opts: [
+      'כי זו הלכה חדשה שלא נאמרה קודם',
+      'א. ה\' נפרע ממנו על גאוותו בדברים א; ב. כדי שיזכו הבנות שפרשה זו תיכתב על ידן',
+      'כי אלעזר הכהן היה צריך לפסוק, לא משה',
+      'כי ה\' רצה שישאלו ישירות'
+    ],
+    ans: 1,
+    hint: 'רש"י: א. ה\' נפרע ממנו על שהתגאה - "והדבר אשר יקשה מכם תקריבון אלי". ב. "ראויה פרשה זו להיכתב ע"י משה, אלא שזכו בנות צלפחד" - מגלגלים זכות על ידי זכאי.',
+    src: 'במדבר כז, ה; רש"י'
+  },
+  {
+    sec: 3,
+    type: 'open',
+    q: 'מה סדר הנחלות שקבע ה\' (סדר הירושה)? פרט את כל השלבים.',
+    hint: 'במדבר כז, ח-יא: בן → בת → אחי המת → אחי האב → קרוב ביותר ממשפחת האב',
+    modelAns: 'סדר הירושה לפי פרק כז: א. הבן יורש. ב. אם אין בן - הבת. ג. אם אין בת - אחיו של המת יורשים. ד. אם אין אחים - אחי האב. ה. אם אין גם אלה - הקרוב ביותר ממשפחת האב יורש.'
+  },
+  {
+    sec: 3,
+    type: 'open',
+    q: 'מהי הבעיה שהעלו ראשי האבות בפרק לו בעניין בנות צלפחד, ומהו הפתרון?',
+    hint: 'הבעיה: אם בנות צלפחד ינשאו לגברים משבט אחר, תעבור נחלתן לאותו שבט. אפילו ביובל - הנחלות אינן חוזרות כי דין היובל נוהג רק במכירה. הפתרון: הבנות ינשאו רק לגברים מתוך שבט מנשה.',
+    modelAns: 'הבעיה (פרק לו): אם בנות צלפחד ינשאו לגברים משבט אחר, נחלתן תעבור לאותו שבט ותיגרע מנחלת מנשה - ואפילו ביובל לא תחזור, כי היובל מחזיר רק מכירה ולא ירושה שעברה בנישואין. הפתרון שנתן משה: "כל בת יורשת נחלה... לאחד ממשפחת מטה אביה תהיה לאשה" - הבנות ינשאו רק בתוך שבטן. ואכן - בנות צלפחד נישאו לגברים משבט מנשה.'
+  },
+  // === פרק כ"ז - מינוי יהושע ===
+  {
+    sec: 4,
+    type: 'mc',
+    q: 'מדוע נאמר למשה על מותו דווקא כאן - לאחר פרשת בנות צלפחד?',
+    opts: [
+      'כי סיים את כל מלאכת המשכן',
+      'כי חשב שאחרי שציווהו להנחיל לבנות, אולי התבטלה הגזירה - וה\' הבהיר שלא',
+      'כי כבר הכין את יהושע לממשיכו',
+      'כי עלה להר סיני לאחרונה'
+    ],
+    ans: 1,
+    hint: 'רש"י: "כיוון שאמר ה\' למשה נתן תתן להם, חשב משה שמא נתבטלה הגזירה. אמר לו הקב"ה: הגזירה במקומה עומדת."',
+    src: 'במדבר כז, יב; רש"י'
+  },
+  {
+    sec: 4,
+    type: 'mc',
+    q: 'מה ביקש משה מה\' כשנודע לו על מותו הקרוב? מה מעיד הדבר על אופיו?',
+    opts: [
+      'שיותר לו להיכנס לארץ לפחות לרגע',
+      'שה\' ימנה מנהיג שינהל את העם גם בשדה הקרב, שלא יהיו "כצאן אשר אין להם רועה"',
+      'שבניו ימשיכו בתפקידו',
+      'שיוכל להניח את ידיו על כל ישראל לפני מותו'
+    ],
+    ans: 1,
+    hint: 'משה לא ביקש על עצמו אלא על העם! פנה אל "אלוהי הרוחות" - שימנה מנהיג שיוכל לעמוד מול כל אחד מישראל לפי דעתו.',
+    src: 'במדבר כז, טו-יז; רש"י'
+  },
+  {
+    sec: 4,
+    type: 'mc',
+    q: 'מדוע ביקש משה מנהיג שיהיה "אלוהי הרוחות" - מה כוונת הפנייה לשם זה?',
+    opts: [
+      'כי רצה מנהיג שיוכל לדבר עם ה\' ישירות',
+      'כי ביקש מנהיג שיוכל לסבול ולהתמודד עם כל אחד מישראל לפי דעתו',
+      'כי רצה מנהיג שיהיה נביא',
+      'כי ביקש שה\' עצמו יהיה המנהיג'
+    ],
+    ans: 1,
+    hint: 'רש"י: "אלוהי הרוחות" - בבקשה למנות עליהם מנהיג שיכול לסבול ולעמוד מול כל אחד מישראל לפי דעתו',
+    src: 'במדבר כז, טז; רש"י'
+  },
+  {
+    sec: 4,
+    type: 'mc',
+    q: 'מהן הפעולות שביצע משה להסמכת יהושע?',
+    opts: [
+      'תפילה ואמירת ברכה',
+      'סמיכת ידיו, העמדתו לפני אלעזר וכל העדה, וצוויו לעיניהם; ונתן מהודו עליו',
+      'כתב לו ספר תורה והחזיר לו את כל מעשיו',
+      'שלח אותו לבדוק את הארץ פעם נוספת'
+    ],
+    ans: 1,
+    hint: 'שלוש פעולות: א. סמיכת ידיו. ב. העמדתו לפני אלעזר וכל העדה וצוויו לעיניהם. ג. נתינת הוד עליו - לחלוק לו כבוד (אב"ע) / קירון עור פנים (רש"י).',
+    src: 'במדבר כז, יח-כ'
+  },
+  {
+    sec: 4,
+    type: 'mc',
+    q: 'מה ההבדל בין הציווי לביצוע בסמיכת ידיו של משה על יהושע?',
+    opts: [
+      'בציווי - ביד ימין, בביצוע - ביד שמאל',
+      'בציווי - "וסמכת את ידך" (יד אחת), בביצוע - "ויסמוך את ידיו" (שתי ידיים) מתוך חיבה',
+      'בציווי - בצנעה, בביצוע - בפומבי',
+      'לא היה הבדל'
+    ],
+    ans: 1,
+    hint: 'בציווי: "וסמכת את ידך" - יד אחת. בביצוע: "ויסמוך את ידיו" - שתי ידיים. להראות את חיבתו של משה ליהושע.',
+    src: 'במדבר כז, יח-כג'
+  },
+  {
+    sec: 4,
+    type: 'open',
+    q: 'מה ההבדל בסמכות בין משה ליהושע? מה תפקיד אלעזר הכהן?',
+    hint: 'משה - דיבר עם ה\' ישירות "פנים אל פנים". יהושע - ינהיג על פי אורים ותומים של אלעזר הכהן. הסמכות מחולקת: מנהיג צבאי-מדיני מול סמכות דתית-כהנית.',
+    modelAns: 'משה קיבל הנחיות ישירות מה\' - "פנים אל פנים". יהושע לא יזכה לכך; הוא יצטרך לשאול בגורל האורים ותומים של אלעזר הכהן לקבלת הנחיות. מדובר בשינוי מבני: הסמכות מתפצלת - יהושע מנהיג בשטח, אלעזר הסמכות הדתית.'
+  }
+];
+
+const SECTIONS = sections.length;
+let mode = 'start'; // 'start' | 'select' | 'game' | 'result'
+let selectedSections = [];
+let gameQ = [];
+let cur = 0, score = 0, correctCount = 0, wrongCount = 0;
+let answered = [], fbClass = [], fbText = [], openVals = [];
+
+function init() {
+  mode = 'start';
+  selectedSections = [];
+  gameQ = [];
+  cur = 0; score = 0; correctCount = 0; wrongCount = 0;
+  render();
+}
+
+function render() {
+  const app = document.getElementById('app');
+  const hf = document.getElementById('hint-float');
+  if (mode === 'start') { hf.style.display='none'; renderStart(app); }
+  else if (mode === 'select') { hf.style.display='none'; renderSelect(app); }
+  else if (mode === 'game') { hf.style.display='flex'; renderGame(app); }
+  else { hf.style.display='none'; renderResult(app); }
+}
+
+function renderStart(app) {
+  const total = allQ.length;
+  const mc = allQ.filter(q=>q.type==='mc').length;
+  const open = allQ.filter(q=>q.type==='open').length;
+  app.innerHTML = `<div class="screen start-box">
+    <div class="start-icon">📖</div>
+    <div class="start-title">מבחן עיון<br>במדבר כ"ה-כ"ז</div>
+    <div class="start-sub">שאלות על חטא בעל פעור, פינחס, המפקד,<br>בנות צלפחד ומינוי יהושע.<br>ויש לך רמז ענק אם תצטרך 😏</div>
+    <div class="stats-row">
+      <div class="stat"><div class="stat-num">${total}</div><div class="stat-lbl">סה"כ שאלות</div></div>
+      <div class="stat"><div class="stat-num">${mc}</div><div class="stat-lbl">רב-ברירה</div></div>
+      <div class="stat"><div class="stat-num">${open}</div><div class="stat-lbl">פתוחות</div></div>
+      <div class="stat"><div class="stat-num">💡</div><div class="stat-lbl">רמזים</div></div>
+    </div>
+    <button class="btn-gold" style="margin-bottom:12px" onclick="mode='select';render()">בחר נושא ✦</button>
+    <button class="btn-gold" style="background:rgba(245,200,66,0.15);color:var(--gold);box-shadow:none;border:1.5px solid rgba(245,200,66,0.3)" onclick="startAll()">כל השאלות</button>
+  </div>`;
+}
+
+function renderSelect(app) {
+  const counts = sections.map((_,i) => allQ.filter(q=>q.sec===i).length);
+  const tabs = sections.map((s,i) => {
+    const sel = selectedSections.includes(i);
+    return `<div onclick="toggleSec(${i})" style="cursor:pointer;background:${sel?'rgba(245,200,66,0.12)':'var(--card)'};border:1.5px solid ${sel?'var(--gold)':'rgba(255,255,255,0.08)'};border-radius:12px;padding:14px 16px;display:flex;justify-content:space-between;align-items:center">
+      <div>
+        <div style="font-size:14px;font-weight:700;color:${sel?'var(--gold)':'var(--text)'}">${s.label}</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:3px">${counts[i]} שאלות</div>
+      </div>
+      <div style="width:24px;height:24px;border-radius:6px;background:${sel?'var(--gold)':'rgba(255,255,255,0.07)'};display:flex;align-items:center;justify-content:center;font-size:14px;color:${sel?'#0f0c1a':'var(--muted)'}">${sel?'✓':''}</div>
+    </div>`;
+  }).join('');
+
+  app.innerHTML = `<div class="screen">
+    <div style="margin-bottom:20px">
+      <div style="font-size:22px;font-weight:900;color:var(--gold);margin-bottom:6px">בחר נושאים</div>
+      <div style="font-size:14px;color:var(--muted)">בחר אחד או יותר</div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px">${tabs}</div>
+    <button class="btn-gold" onclick="startSelected()" ${selectedSections.length===0?'disabled style="opacity:0.4"':''}>
+      התחל (${selectedSections.reduce((s,i)=>s+allQ.filter(q=>q.sec===i).length,0)} שאלות)
+    </button>
+    <button onclick="mode='start';render()" style="width:100%;margin-top:10px;padding:12px;background:transparent;border:none;color:var(--muted);font-family:Heebo,sans-serif;font-size:14px;cursor:pointer">← חזור</button>
+  </div>`;
+}
+
+function toggleSec(i) {
+  const idx = selectedSections.indexOf(i);
+  if (idx >= 0) selectedSections.splice(idx,1);
+  else selectedSections.push(i);
+  renderSelect(document.getElementById('app'));
+}
+
+function startAll() {
+  setupGame(allQ);
+}
+function startSelected() {
+  if (selectedSections.length === 0) return;
+  const q = allQ.filter(q => selectedSections.includes(q.sec));
+  setupGame(q);
+}
+function setupGame(q) {
+  gameQ = q;
+  cur = 0; score = 0; correctCount = 0; wrongCount = 0;
+  answered = new Array(q.length).fill(false);
+  fbClass = new Array(q.length).fill('');
+  fbText = new Array(q.length).fill('');
+  openVals = new Array(q.length).fill('');
+  mode = 'game';
+  render();
+}
+
+function renderGame(app) {
+  const q = gameQ[cur];
+  const pct = Math.round((cur / gameQ.length) * 100);
+  const letters = ['א','ב','ג','ד'];
+  const done = answered[cur];
+  const secLabel = sections[q.sec].label;
+
+  let body = '';
+  if (q.type === 'mc') {
+    body = `<div class="options">` + q.opts.map((opt,i) => {
+      let cls = 'opt-btn';
+      if (done && i === q.ans) cls += ' correct';
+      if (done && fbClass[cur]==='feedback-wrong' && i !== q.ans) cls += '';
+      return `<button class="${cls}" id="o${i}" onclick="pickMC(${i})" ${done?'disabled':''}><span class="opt-letter">${letters[i]}</span><span>${opt}</span></button>`;
+    }).join('') + `</div>`;
+  } else {
+    body = `
+      <textarea class="open-area" id="ota" placeholder="כתוב את תשובתך כאן..." ${done?'readonly':''}>${openVals[cur]||''}</textarea>
+      <div class="model-answer ${done?'show':''}">${q.modelAns||''}</div>`;
+  }
+
+  const fbHtml = done ? `<div class="feedback-bar show ${fbClass[cur]}">${fbText[cur]}</div>` : '';
+
+  let actionHtml = '';
+  if (!done && q.type === 'open') {
+    actionHtml = `<div class="action-row"><button class="btn-secondary" onclick="submitOpen()">הצג תשובה מדגם</button></div>`;
+  } else if (done) {
+    actionHtml = `<div class="action-row"><button class="btn-next show" onclick="nextQ()">${cur===gameQ.length-1?'לתוצאות 🏆':'הבאה ←'}</button></div>`;
+  }
+
+  app.innerHTML = `<div class="screen">
+    <div class="game-top">
+      <span class="q-counter">שאלה ${cur+1} / ${gameQ.length}</span>
+      <span class="score-badge">⭐ ${score}</span>
+    </div>
+    <div class="progress-wrap"><div class="progress-fill" style="width:${pct}%"></div></div>
+    <div class="section-label">${secLabel}</div>
+    <div class="q-card">
+      <span class="q-badge ${q.type==='mc'?'badge-mc':'badge-open'}">${q.type==='mc'?'רב-ברירה':'שאלה פתוחה'}</span>
+      <div class="q-text">${q.q}</div>
+      ${q.src ? `<div class="q-source">${q.src}</div>` : ''}
+    </div>
+    ${body}
+    ${fbHtml}
+    ${actionHtml}
+  </div>`;
+}
+
+function pickMC(chosen) {
+  const q = gameQ[cur];
+  if (answered[cur]) return;
+  answered[cur] = true;
+  const isRight = chosen === q.ans;
+  if (isRight) { score++; correctCount++; fbClass[cur]='feedback-correct'; fbText[cur]='✅ נכון! כל הכבוד'; }
+  else { wrongCount++; fbClass[cur]='feedback-wrong'; fbText[cur]='❌ לא נכון. התשובה: ' + q.opts[q.ans]; }
+  document.querySelectorAll('.opt-btn').forEach((b,i) => {
+    b.disabled = true;
+    if (i === q.ans) b.classList.add('correct');
+    if (i === chosen && !isRight) b.classList.add('wrong');
+  });
+  const fb = document.createElement('div');
+  fb.className = 'feedback-bar show ' + fbClass[cur];
+  fb.textContent = fbText[cur];
+  const opts = document.querySelector('.options');
+  opts.after(fb);
+  const btn = document.createElement('div');
+  btn.className = 'action-row';
+  btn.innerHTML = `<button class="btn-next show" onclick="nextQ()">${cur===gameQ.length-1?'לתוצאות 🏆':'הבאה ←'}</button>`;
+  fb.after(btn);
+}
+
+function submitOpen() {
+  const ta = document.getElementById('ota');
+  if (ta) openVals[cur] = ta.value;
+  answered[cur] = true;
+  fbClass[cur] = 'feedback-open';
+  fbText[cur] = 'ראה את תשובת המדגם למעלה';
+  render();
+}
+
+function nextQ() {
+  cur++;
+  if (cur >= gameQ.length) mode = 'result';
+  render();
+}
+
+function renderResult(app) {
+  const mc = gameQ.filter(q=>q.type==='mc').length;
+  const pct = mc > 0 ? Math.round((correctCount/mc)*100) : 0;
+  let emoji='🏆', msg='מצוין! שולט בחומר';
+  if(pct<90){emoji='😊';msg='טוב מאוד!';}
+  if(pct<70){emoji='📚';msg='כדאי לחזור על החומר';}
+  if(pct<50){emoji='💪';msg='לנסות שוב!';}
+
+  app.innerHTML = `<div class="screen result-box">
+    <div class="result-icon">${emoji}</div>
+    <div class="result-title">${msg}</div>
+    <div class="big-score">${mc>0?correctCount+'/'+mc:'—'}</div>
+    <div class="score-label">שאלות רב-ברירה נכונות</div>
+    <div class="result-grid">
+      <div class="r-stat"><div class="r-stat-num" style="color:var(--correct)">${correctCount}</div><div class="r-stat-lbl">נכונות</div></div>
+      <div class="r-stat"><div class="r-stat-num" style="color:var(--wrong)">${wrongCount}</div><div class="r-stat-lbl">שגויות</div></div>
+      <div class="r-stat"><div class="r-stat-num" style="color:var(--gold)">${mc>0?pct+'%':'—'}</div><div class="r-stat-lbl">הצלחה</div></div>
+      <div class="r-stat"><div class="r-stat-num" style="color:#a855f7">${score}</div><div class="r-stat-lbl">ניקוד</div></div>
+    </div>
+    <button class="btn-gold" style="margin-bottom:12px" onclick="setupGame(gameQ)">שחק שוב אותן שאלות</button>
+    <button class="btn-gold" style="background:rgba(245,200,66,0.15);color:var(--gold);box-shadow:none;border:1.5px solid rgba(245,200,66,0.3)" onclick="init()">חזור לתפריט</button>
+  </div>`;
+}
+
+function openHint() {
+  if (mode !== 'game' || cur >= gameQ.length) return;
+  document.getElementById('hint-text').textContent = gameQ[cur].hint;
+  document.getElementById('hint-overlay').classList.remove('hidden');
+}
+function closeHint() {
+  document.getElementById('hint-overlay').classList.add('hidden');
+}
+document.getElementById('hint-overlay').addEventListener('click', function(e){
+  if(e.target===this) closeHint();
+});
+
+init();
+</script>
+</body>
+</html>
